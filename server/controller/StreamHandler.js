@@ -137,6 +137,70 @@ const VideoHandler = {
       res.send("Something went wrong!!");
     }
   },
+
+  getVideoHost: async (req, res) => {
+    try {
+      const { hostID } = req.params;
+      const data = await Stream.getVideoHost(hostID);
+      res.status(200).send(data);
+    } catch (err) {
+      console.log(err);
+      res.send("Something went wrong!!");
+    }
+  },
+
+  getVideoGuest: async (req, res) => {
+    try {
+      const { guestID } = req.params;
+      const data = await Stream.getVideoGuest(guestID);
+      res.status(200).send(data);
+    } catch (err) {
+      console.log(err);
+      res.send("Something went wrong!!");
+    }
+  },
+
+  getSpecificVideo: async (req, res) => {
+    try {
+      const { streamID } = req.params;
+      const data = await Stream.getSpecificVideo(streamID);
+      res.status(200).send(data);
+    } catch (err) {
+      console.log(err);
+      res.send("Something went wrong!!");
+    }
+  },
+
+  saveComments: async (req, res) => {
+    try {
+      const obj = req.body;
+      const data = await Stream.SaveComments(obj);
+      res.status(200).send(data);
+    } catch (err) {
+      res.send(err);
+    }
+  },
+
+  saveReply: async (req, res) => {
+    try {
+      const obj = req.body;
+      const data = await Stream.SaveReplies(obj);
+      res.status(200).send(data);
+    } catch (err) {
+      res.send(err);
+    }
+  },
+
+  getCommentsAndReplies: async (req, res) => {
+    try {
+      const { streamID } = req.params;
+      //console.log(streamID);
+      const data = await Stream.getCommentsAndReplies(streamID);
+      res.status(200).send(data);
+    } catch (err) {
+      res.send(err);
+    }
+  },
 };
 
 module.exports = VideoHandler;

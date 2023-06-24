@@ -7,7 +7,6 @@ const StreamHandler = require("./controller/StreamHandler");
 const multer = require("multer");
 const upload = multer({ dest: "uploads/" });
 const fs = require("fs");
-
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -59,7 +58,12 @@ app.post("/save-schedule", StreamHandler.saveSchedule);
 app.get("/get-meetings/:roomID", StreamHandler.getEventList);
 app.get("/get-attendance-host/:hostID", StreamHandler.getAttendanceHost);
 app.get("/get-attendance-guest/:guestID", StreamHandler.getAttendanceGuest);
-
+app.get("/get-host-videos/:hostID", StreamHandler.getVideoHost);
+app.get("/get-guest-videos/:guestID", StreamHandler.getVideoGuest);
+app.get("/get-specific-video/:streamID", StreamHandler.getSpecificVideo);
+app.post("/post-comment", StreamHandler.saveComments);
+app.post("/post-reply", StreamHandler.saveReply);
+app.get("/get-comments-replies/:streamID", StreamHandler.getCommentsAndReplies);
 app.get(
   "/get-stream-status-host/:email",
   StreamHandler.getCurrentStreamingStatusofHost

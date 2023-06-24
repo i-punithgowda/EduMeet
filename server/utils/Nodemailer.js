@@ -23,7 +23,7 @@ async function messenger(subject, message, email) {
     if (error) {
       console.log(error);
     } else {
-      console.log("Email sent: " + info.response);
+      "Email sent: " + info.response;
     }
   });
 }

@@ -1,7 +1,9 @@
 const db = require("../db/db");
 const uuid = require("uuid");
 const dateGenerator = require("../utils/DateGenerator");
-const e = require("express");
+const ThumbnailExtractor = require("../utils/ThumbnailExtractor");
+const path = require("path");
+const fs = require("fs");
 
 const Stream = {};
 
@@ -300,7 +302,7 @@ Stream.getAttendanceHost = (hostID) => {
 };
 
 Stream.getAttendanceGuest = (guestID) => {
-  console.log(guestID);
+  // console.log(guestID);
   return new Promise((resolve, reject) => {
     db.query(
       `SELECT V.id AS stream_id, V.title AS stream_title, CASE WHEN A.user_id IS NULL THEN 'Absent' ELSE 'Present' END AS attendance_status  FROM Video_Stream V JOIN ( SELECT H.id FROM User H JOIN User G ON H.college_id = G.college_id AND H.department_id = G.department_id WHERE G.id = '${guestID}') AS Hosts ON V.host_id = Hosts.id LEFT JOIN Attendance A ON A.stream_id = V.id AND A.user_id = '${guestID}'`,
@@ -309,6 +311,245 @@ Stream.getAttendanceGuest = (guestID) => {
           reject({ status: false, message: err });
         } else {
           resolve(results);
+        }
+      }
+    );
+  });
+};
+
+Stream.getVideoHost = (hostID) => {
+  //console.log(hostID);
+  return new Promise((resolve, reject) => {
+    db.query(
+      `SELECT id, title, description, end_time, video_url FROM Video_Stream WHERE host_id='${hostID}'`,
+      async (err, results) => {
+        if (err) {
+          console.log(err);
+          reject({ status: false, message: err });
+        } else {
+          const videoInfo = [];
+          for (const result of results) {
+            try {
+              const thumbnailPath = await ThumbnailExtractor(
+                result.video_url,
+                result.id
+              );
+
+              //console.log(path.resolve(__dirname, "..", thumbnailPath));
+              const thumbnailData = fs.readFileSync(
+                path.resolve(__dirname, "..", thumbnailPath)
+              );
+
+              const video = {
+                id: uuid.v4(),
+                title: result.title,
+                description: result.description,
+                date: result.end_time,
+                video_url: result.video_url,
+                stream_id: result.id,
+                thumbnail: thumbnailData.toString("base64"),
+              };
+              videoInfo.push(video);
+              videoInfo.push(video);
+              videoInfo.push(video);
+              videoInfo.push(video);
+              videoInfo.push(video);
+              //console.log(videoInfo.length);
+            } catch (error) {
+              console.error(error);
+            }
+          }
+          resolve(videoInfo);
+        }
+      }
+    );
+  });
+};
+
+Stream.getVideoGuest = (guestID) => {
+  //console.log(hostID);
+  return new Promise((resolve, reject) => {
+    db.query(
+      `SELECT h.*, v.* FROM User AS g JOIN User AS h ON g.college_id = h.college_id AND g.department_id = h.department_id JOIN Video_Stream AS v ON h.id = v.host_id WHERE g.id = '${guestID}' AND g.type = 'guest' AND h.type = 'host';`,
+      async (err, results) => {
+        if (err) {
+          console.log(err);
+          reject({ status: false, message: err });
+        } else {
+          const videoInfo = [];
+          for (const result of results) {
+            try {
+              const thumbnailPath = await ThumbnailExtractor(
+                result.video_url,
+                result.id
+              );
+
+              //console.log(path.resolve(__dirname, "..", thumbnailPath));
+              const thumbnailData = fs.readFileSync(
+                path.resolve(__dirname, "..", thumbnailPath)
+              );
+
+              const video = {
+                id: uuid.v4(),
+                title: result.title,
+                description: result.description,
+                date: result.end_time,
+                video_url: result.video_url,
+                stream_id: result.id,
+                thumbnail: thumbnailData.toString("base64"),
+              };
+              videoInfo.push(video);
+
+              //console.log(videoInfo.length);
+            } catch (error) {
+              console.error(error);
+            }
+          }
+          resolve(videoInfo);
+        }
+      }
+    );
+  });
+};
+
+Stream.getSpecificVideo = (streamID) => {
+  return new Promise((resolve, reject) => {
+    db.query(
+      `select * from Video_Stream where id='${streamID}'`,
+      (err, results) => {
+        if (err) {
+          reject({ status: false, message: "Database error!" });
+        } else {
+          console.log(results);
+
+          console.log(path.resolve(__dirname, "..", results[0].video_url));
+          const videoData = fs.readFileSync(
+            path.resolve(__dirname, "..", results[0].video_url)
+          );
+          const videoBase64 = Buffer.from(videoData).toString("base64");
+
+          const videoInfo = [
+            {
+              id: results[0].id,
+              title: results[0].title,
+              description: results[0].description,
+              date: results[0].date,
+            },
+          ];
+
+          const responseData = {
+            videoInfo,
+            videoFile: videoBase64,
+          };
+
+          resolve(responseData);
+        }
+      }
+    );
+  });
+};
+
+Stream.SaveComments = (data) => {
+  const id = uuid.v4();
+  return new Promise((resolve, reject) => {
+    db.query(
+      `insert into Comment (id,user_id,video_stream_id,comment_text,timestamp) values('${id}','${data.userID}','${data.streamID}','${data.commentText}','${data.timeStamp}')`,
+      (err, result) => {
+        if (err) {
+          console.log(err);
+          reject({ status: false, message: "Database error" });
+        } else {
+          console.log(result);
+          resolve({ status: true, message: "Comment stored!" });
+        }
+      }
+    );
+  });
+};
+
+Stream.SaveReplies = (data) => {
+  const id = uuid.v4();
+  return new Promise((resolve, reject) => {
+    db.query(
+      `insert into Reply (id,user_id,comment_id,reply_text,timestamp) values('${id}','${
+        data.userID
+      }','${data.commentID}','${data.replyText}','${Date.now()}')`,
+      (err, result) => {
+        if (err) {
+          console.log(err);
+          reject({ status: false, message: "Database error" });
+        } else {
+          resolve({ status: true, message: "Reply stored!" });
+        }
+      }
+    );
+  });
+};
+
+Stream.getCommentsAndReplies = (streamID) => {
+  console.log(streamID);
+  return new Promise((resolve, reject) => {
+    db.query(
+      `SELECT c.id, c.comment_text, c.user_id, c.timestamp, u.name 
+       FROM Comment c 
+       JOIN User u ON c.user_id = u.id 
+       WHERE c.video_stream_id='${streamID}'`,
+      (err, comments) => {
+        if (err) {
+          reject({ status: false, message: "Database error!" });
+        } else {
+          const promises = comments.map((comment) => {
+            return new Promise((resolve, reject) => {
+              const commentID = comment.id;
+              db.query(
+                `SELECT r.reply_text, r.timestamp, r.user_id, u.name 
+                 FROM Reply r 
+                 JOIN User u ON r.user_id = u.id 
+                 WHERE r.comment_id='${commentID}'`,
+                (err, replies) => {
+                  if (err) {
+                    reject({ status: false, message: "Database error!" });
+                  } else {
+                    const tempObj = {
+                      commentText: comment.comment_text,
+                      comment_id: comment.id,
+                      commentTimeStamp: comment.timestamp,
+                      commentUser: {
+                        id: comment.user_id,
+                        name: comment.name,
+                      },
+                      replies: replies.map((reply) => ({
+                        replyText: reply.reply_text,
+                        replyTimeStamp: reply.timestamp,
+                        replyUser: {
+                          id: reply.user_id,
+                          name: reply.name,
+                        },
+                      })),
+                    };
+                    resolve(tempObj);
+                  }
+                }
+              );
+            });
+          });
+
+          Promise.all(promises)
+            .then((commentsAndReplies) => {
+              commentsAndReplies.sort((a, b) => {
+                const timestampA = new Date(a.commentTimeStamp);
+                const timestampB = new Date(b.commentTimeStamp);
+                return timestampA - timestampB;
+              });
+
+              resolve(commentsAndReplies);
+            })
+            .catch((error) => {
+              reject({
+                status: false,
+                message: "Error fetching comments and replies!",
+              });
+            });
         }
       }
     );

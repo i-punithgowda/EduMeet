@@ -7,9 +7,10 @@ import MicIcon from "@mui/icons-material/Mic";
 import MicOffIcon from "@mui/icons-material/MicOff";
 import { Box, Icon } from "@mui/material";
 import CartoonImage from "../../../assets/svg/girl.svg";
+import { useDispatch } from "react-redux";
+import { stateModifier } from "../../../features/reducers/state-slice";
 
 function Stream({ currentUser, email, type, firstName }) {
-  console.log("Negga sef", currentUser, email, type);
   const [loading, setLoading] = useState(true);
   const [streamingStatus, setStreamingStatus] = useState(false);
   const baseAPI = process.env.REACT_APP_BASEAPI;
@@ -20,6 +21,7 @@ function Stream({ currentUser, email, type, firstName }) {
   const [isAudioOn, setIsAudioOn] = useState(true);
   const [roomID, setRoomID] = useState("");
   const [currentStreamId, setCurrStreamID] = useState("");
+  const dispatch = useDispatch();
 
   const fetchStreamingStatus = async (url) => {
     try {
@@ -175,10 +177,16 @@ function Stream({ currentUser, email, type, firstName }) {
                   schedule or watch recorded lectures ..{" "}
                 </h1>
                 <Box className="flex flex-col w-full justify-evenly items-center bg-primary my-8">
-                  <button className="btn btn-secondary  btn-wide my-5">
+                  <button
+                    className="btn btn-secondary  btn-wide my-5"
+                    onClick={() => dispatch(stateModifier("schedule"))}
+                  >
                     View Schedule
                   </button>
-                  <button className="btn btn-secondary btn-wide my-5">
+                  <button
+                    className="btn btn-secondary btn-wide my-5"
+                    onClick={() => dispatch(stateModifier("uploads"))}
+                  >
                     Recorded Lectures
                   </button>
                 </Box>

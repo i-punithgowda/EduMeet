@@ -11,6 +11,7 @@ import Additional from "./pages/Additional";
 import Verification from "./pages/Verification";
 import Panel from "./pages/Dashboard";
 import Verify from "./pages/Verify";
+import "./App.css";
 
 function App() {
   return (
