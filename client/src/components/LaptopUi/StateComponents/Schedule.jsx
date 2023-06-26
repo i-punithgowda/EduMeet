@@ -14,6 +14,7 @@ import {
 } from "@material-ui/pickers";
 import ScheduleImage from "../../../assets/svg/schedule.svg";
 import { TextField } from "@material-ui/core";
+import Loading from "../../Loading";
 
 const useStyles = makeStyles({
   dateTimePicker: {
@@ -202,10 +203,10 @@ function Schedule(props) {
 
   if (state == "view") {
     if (loading) {
-      return <h1>Loading...</h1>;
+      return <Loading />;
     } else {
       return (
-        <Box className="w-full h-full bg-error p-3 flex flex-col justify-around items-center">
+        <Box className="w-full h-full  p-3 flex flex-col justify-around items-center">
           <h1 className="text-center py-3 text-2xl text-accent-content">
             {" "}
             View Current Schedule
@@ -222,7 +223,7 @@ function Schedule(props) {
 
           {type && type == "Host" ? (
             <span
-              className="text-neutral font-bold text-xl underline cursor-pointer"
+              className="text-secondary-content font-bold text-xl underline cursor-pointer"
               onClick={() => setState("set")}
             >
               Click here to schedule a meet
@@ -233,7 +234,7 @@ function Schedule(props) {
     }
   } else {
     return (
-      <Box className="w-full h-full bg-error p-3 flex flex-col justify-around items-center">
+      <Box className="w-full h-full  p-3 flex flex-col justify-around items-center">
         <h1 className="text-center py-3 text-2xl text-accent-content">
           {" "}
           Create a new Meeting
@@ -296,7 +297,7 @@ function Schedule(props) {
         </Box>
 
         <span
-          className="text-neutral font-bold text-xl underline cursor-pointer"
+          className="text-secondary-content font-bold text-xl underline cursor-pointer"
           onClick={() => setState("view")}
         >
           Click here to view schedules

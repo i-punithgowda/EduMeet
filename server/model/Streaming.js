@@ -350,10 +350,7 @@ Stream.getVideoHost = (hostID) => {
                 thumbnail: thumbnailData.toString("base64"),
               };
               videoInfo.push(video);
-              videoInfo.push(video);
-              videoInfo.push(video);
-              videoInfo.push(video);
-              videoInfo.push(video);
+
               //console.log(videoInfo.length);
             } catch (error) {
               console.error(error);

@@ -5,9 +5,10 @@ import socket from "../../socket";
 import VideoCard from "../Video/VideoCard";
 import BottomBar from "../BottomBar/BottomBar";
 import Chat from "../Chat/Chat";
-import { useParams } from "react-router-dom";
+import PollIcon from "@mui/icons-material/Poll";
 import { Box } from "@mui/material";
 import axios from "axios";
+import { v4 as uuidv4 } from "uuid";
 import HostVideoCard from "../Video/HostVideoCard";
 import BackHandIcon from "@mui/icons-material/BackHand";
 import CameraAltOutlinedIcon from "@mui/icons-material/CameraAltOutlined";
@@ -20,9 +21,11 @@ import Tooltip from "@mui/material/Tooltip";
 import { useDispatch } from "react-redux";
 import { stateModifier } from "../../features/reducers/state-slice";
 import RecordRTC from "recordrtc";
+import AlertSound from "../../assets/sounds/alert.mp3";
 
 const Room = (props) => {
   const currentUser = sessionStorage.getItem("user");
+  const audio = new Audio(AlertSound);
   const [peers, setPeers] = useState([]);
   const [userVideoAudio, setUserVideoAudio] = useState({
     localUser: { video: true, audio: true },
@@ -32,6 +35,13 @@ const Room = (props) => {
   const [attendanceTaken, setAttendanceTaken] = useState(false);
   const [screenShare, setScreenShare] = useState(false);
   const [showVideoDevices, setShowVideoDevices] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState("");
+  const [currentQuestionID, setCurrentQuestionID] = useState("");
+  const [pollOptions, setPollOptions] = useState([]);
+  const [pollRecieved, setPollRecieved] = useState(false);
+  const [selectedPollOption, setSelectedPollOption] = useState("");
+  const [pollQuestions, setPollQuestions] = useState([]);
+  const [showPollQuestions, setshowPollQuestions] = useState(false);
   const peersRef = useRef([]);
   const userVideoRef = useRef();
   const screenTrackRef = useRef();
@@ -113,6 +123,63 @@ const Room = (props) => {
     socket.emit("get-all-users", {
       roomId: roomId,
     });
+  };
+
+  const handlePolls = () => {
+    const questionID = uuidv4();
+    // console.log("hiihihi", questionID);
+    const question = window.prompt("Enter a question");
+    const nOptions = window.prompt("Enter total number of options");
+    const options = [];
+    for (var i = 0; i < nOptions; i++) {
+      options.push(window.prompt(`Enter Option ${i + 1}`));
+    }
+    console.log("question : " + question);
+    console.log(options);
+
+    if (question != null && options.length > 0) {
+      socket.emit("create-poll", {
+        questionID: questionID,
+        roomId: roomId,
+        currentQuestion: question,
+        pollOptions: options,
+      });
+    }
+  };
+
+  const handlePollSubmit = () => {
+    if (selectedPollOption.length > 0) {
+      socket.emit("poll-submit", {
+        roomId: roomId,
+        currentUser: currentUser,
+        question: currentQuestion,
+        selectedPollOption: selectedPollOption,
+        questionID: currentQuestionID,
+      });
+      setSelectedPollOption("");
+      setPollRecieved(false);
+      setCurrentQuestionID("");
+      setCurrentQuestion("");
+      setPollOptions("");
+      audio.pause();
+      audio.currentTime = 0;
+      //console.log(selectedPollOption, currentQuestionID);
+    }
+  };
+
+  const getPollQuestions = () => {
+    socket.emit("get-poll-questions", {
+      roomId: roomId,
+    });
+  };
+
+  const fetchPollResults = (questionID) => {
+    console.log(questionID);
+    socket.emit("get-poll-results", {
+      roomId: roomId,
+      questionID: questionID,
+    });
+    setshowPollQuestions(false);
   };
 
   useEffect(() => {
@@ -250,6 +317,47 @@ const Room = (props) => {
       alert("Stream ended, you can get stream recordings in uploads section");
 
       dispatch(stateModifier("uploads"));
+    });
+
+    socket.on(
+      "poll-recieved",
+      ({ currentQuestion, pollOptions, questionID }) => {
+        setPollRecieved(true);
+        setCurrentQuestionID(questionID);
+        audio.play();
+        console.log("poll recieved , type : " + type);
+        console.log("question ID : " + currentQuestion);
+        if (type == "Guest") {
+          //          alert(`poll recieved`);
+          setCurrentQuestion(currentQuestion);
+          setPollOptions(pollOptions);
+        }
+      }
+    );
+
+    socket.on("poll-questions", (questions) => {
+      const questionsArray = [];
+      questions.map((result) => {
+        questionsArray.push({
+          question: result.question,
+          questionID: result.questionID,
+        });
+      });
+
+      console.log(questionsArray);
+      setPollQuestions(questionsArray);
+      setshowPollQuestions(true);
+    });
+
+    socket.on("poll-results", (results) => {
+      console.log(results);
+      if (type == "Host") {
+        alert(
+          `Result of poll : ${results[0].question} is : ${JSON.stringify(
+            results[0].options
+          )}`
+        );
+      }
     });
 
     socket.on("FE-toggle-camera", ({ userId, switchTarget }) => {
@@ -521,7 +629,6 @@ const Room = (props) => {
         alignItems: "center",
         padding: "20px",
       }}
-      className="bg-base-200"
     >
       <Box
         sx={{
@@ -556,18 +663,26 @@ const Room = (props) => {
                   height: "100%",
                   width: "100%",
                 }}
-                onClick={expandScreen}
               >
                 <video
                   playsInline
                   autoPlay
                   style={{ height: "300px", width: "100%" }}
                   ref={userVideoRef}
+                  onClick={expandScreen}
                 />
                 <span className="relative  bottom-12 text-2xl text-secondary-content font-bold">
                   {firstName}
                   <span className="text-sm">(Host)</span>
                 </span>
+                <Box>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={getPollQuestions}
+                  >
+                    Get Poll Questions
+                  </button>
+                </Box>
               </Box>
             ) : null}
           </Box>
@@ -660,7 +775,90 @@ const Room = (props) => {
                       />
                     </span>
                   </Tooltip>
+
+                  <Tooltip title="Live Polls">
+                    <span
+                      onClick={handlePolls}
+                      className={`p-3 bg-accent rounded-full mx-3`}
+                    >
+                      <Icon
+                        component={PollIcon}
+                        sx={{ color: "#fff", fontWeight: "bold" }}
+                      />
+                    </span>
+                  </Tooltip>
                 </Box>
+              ) : null}
+
+              {pollRecieved == true && type == "Guest" ? (
+                <div class="fixed inset-0 flex items-center justify-center z-50">
+                  <div className="mockup-code ">
+                    <pre data-prefix="#">
+                      <code>{roomId} has a new poll</code>
+                    </pre>
+                    <pre data-prefix=">" className="text-warning">
+                      {currentQuestion}
+                    </pre>
+                    <pre className="text-warning w-full flex flex-col justify-center items-center ">
+                      {pollOptions.length > 0
+                        ? pollOptions.map((option) => {
+                            return (
+                              <Box key={option} className="flex">
+                                <input
+                                  type="radio"
+                                  name="poll-option"
+                                  value={option}
+                                  onChange={(e) => {
+                                    setSelectedPollOption(e.target.value);
+                                  }}
+                                />
+                                <label>{option}</label>
+                              </Box>
+                            );
+                          })
+                        : null}
+                    </pre>
+                    <pre className="w-full flex  justify-center items-center">
+                      <button
+                        onClick={handlePollSubmit}
+                        className="btn btn-warning"
+                      >
+                        Submit answer
+                      </button>
+                    </pre>
+                  </div>
+                </div>
+              ) : null}
+
+              {pollQuestions.length > 0 &&
+              type == "Host" &&
+              showPollQuestions == true ? (
+                <div class="fixed inset-0 flex items-center justify-center z-50">
+                  <div className="mockup-code ">
+                    <pre data-prefix="#">
+                      <code>{roomId}'s Questions</code>
+                    </pre>
+                    <pre className="text-warning w-full flex flex-col justify-center items-center ">
+                      {pollQuestions.length > 0
+                        ? pollQuestions.map((question) => {
+                            return (
+                              <Box
+                                key={question.questionID}
+                                className="flex w-full text-center justify-center items-center bg-secondary"
+                                onClick={() =>
+                                  fetchPollResults(question.questionID)
+                                }
+                              >
+                                <span className="w-full  text-secondary-content">
+                                  {question.question}
+                                </span>
+                              </Box>
+                            );
+                          })
+                        : null}
+                    </pre>
+                  </div>
+                </div>
               ) : null}
             </Box>
           </Box>

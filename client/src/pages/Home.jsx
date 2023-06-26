@@ -98,7 +98,7 @@ function Home() {
           <h1 className="text-2xl  text-secondary font-bold text-center ">
             Easily schedule meetings
           </h1>
-          <p className="text-xl text-justify  text-cl lg:w-6/12 py-3 leading-8 text-neutral">
+          <p className="text-sm lg:text-xl text-justify   lg:w-6/12 py-3 leading-8 text-neutral">
             You can easily make and maintain schedules on our site, as well as
             send reminders, all in one location. Furthermore, scheduling
             meetings has never been simpler thanks to our customizable meeting

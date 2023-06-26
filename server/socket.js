@@ -7,6 +7,7 @@ const path = require("path");
 
 let socketList = {};
 const roomData = [];
+const pollResults = [];
 
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -129,6 +130,80 @@ io.on("connection", (socket) => {
     console.log("end - stream - recieved ");
     console.log("stream-ended-event emitted to room" + roomId);
     io.sockets.in(roomId).emit("stream-ended");
+  });
+
+  socket.on(
+    "create-poll",
+    ({ roomId, currentQuestion, pollOptions, questionID }) => {
+      console.log("create - poll - recieved ");
+      console.log(`${roomId}-${currentQuestion}-${pollOptions}-${questionID}`);
+      io.sockets.in(roomId).emit("poll-recieved", {
+        questionID: questionID,
+        currentQuestion: currentQuestion,
+        pollOptions: pollOptions,
+      });
+    }
+  );
+
+  socket.on(
+    "poll-submit",
+    ({ roomId, currentUser, selectedPollOption, questionID, question }) => {
+      pollResults.push({
+        roomId: roomId,
+        questionID: questionID,
+        selectedPollOption: selectedPollOption,
+        question: question,
+      });
+    }
+  );
+
+  socket.on("get-poll-questions", ({ roomId }) => {
+    console.log("request received");
+    const uniqueQuestions = [];
+
+    pollResults.forEach((poll) => {
+      if (
+        poll.roomId === roomId &&
+        !uniqueQuestions.some((q) => q.questionID === poll.questionID)
+      ) {
+        uniqueQuestions.push({
+          roomId: poll.roomId,
+          questionID: poll.questionID,
+          selectedPollOption: poll.selectedPollOption,
+          question: poll.question,
+        });
+      }
+    });
+
+    console.log(uniqueQuestions);
+    io.sockets.in(roomId).emit("poll-questions", uniqueQuestions);
+  });
+
+  socket.on("get-poll-results", ({ roomId, questionID }) => {
+    const uniqueQuestions = {};
+
+    pollResults.forEach((result) => {
+      if (result.roomId === roomId && result.questionID === questionID) {
+        const questionKey = `${result.questionID}_${result.question}`;
+        if (!uniqueQuestions[questionKey]) {
+          uniqueQuestions[questionKey] = {
+            questionID: result.questionID,
+            question: result.question,
+            options: {},
+          };
+        }
+        const optionKey = `${result.selectedPollOption}`;
+        if (!uniqueQuestions[questionKey].options[optionKey]) {
+          uniqueQuestions[questionKey].options[optionKey] = 1;
+        } else {
+          uniqueQuestions[questionKey].options[optionKey]++;
+        }
+      }
+    });
+
+    const results = Object.values(uniqueQuestions);
+
+    io.sockets.in(roomId).emit("poll-results", results);
   });
 
   socket.on("get-all-users", ({ roomId }) => {

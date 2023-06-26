@@ -5,6 +5,7 @@ import VideoPlayer from "../videoPlayer";
 import { formatDistanceToNow } from "date-fns";
 import SpecificVideo from "./SpecificVideo";
 import { CommentSection } from "./Comments/CommentSection";
+import Loading from "../../Loading";
 
 function Uploads({ type, email, firstName, currentUser }) {
   const [loading, setLoading] = useState(false);
@@ -104,10 +105,10 @@ function Uploads({ type, email, firstName, currentUser }) {
 
   if (state == "view") {
     if (loading) {
-      return <h1>Loading...</h1>;
+      return <Loading />;
     } else {
       return (
-        <Box className="w-full h-full bg-error flex justify-center items-center flex-col">
+        <Box className="w-full h-full  flex justify-center items-center flex-col">
           <h1 className="text-2xl font-bold">Recorded Lectures</h1>
           <Box className="w-11/12 h-4/6 my-8 overflow-x-auto flex justify-center items-start">
             {videoList.length > 0 ? (
@@ -138,10 +139,10 @@ function Uploads({ type, email, firstName, currentUser }) {
     }
   } else {
     if (loading) {
-      return <h1>Loading...</h1>;
+      return <Loading />;
     } else {
       return (
-        <Box className="h-full w-full bg-error flex justify-center items-center">
+        <Box className="h-full w-full  flex justify-center items-center">
           <Box className="main-container w-full h-full flex justify-center items-center">
             <Box className="video-container w-8/12 h-full flex justify-center items-center flex-col bg-base-200">
               <Box className="menu w-full  ml-5 my-8">

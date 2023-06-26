@@ -4,6 +4,7 @@ import { DataGrid } from "@mui/x-data-grid";
 import { GridToolbar } from "@mui/x-data-grid";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
+import Loading from "../../Loading";
 
 function Attendance({ type, email, firstName, currentUser }) {
   const [loading, setLoading] = useState(true);
@@ -104,10 +105,10 @@ function Attendance({ type, email, firstName, currentUser }) {
 
   if (type == "Host") {
     if (loading) {
-      return <h1>Loading...</h1>;
+      return <Loading />;
     } else {
       return (
-        <Box className="w-full bg-error h-full flex flex-col justify-center items-center">
+        <Box className="w-full  h-full flex flex-col justify-center items-center">
           <h1 className="text-center text-xl font-bold ">
             Attendance data of streams
           </h1>
@@ -161,10 +162,10 @@ function Attendance({ type, email, firstName, currentUser }) {
     }
   } else {
     if (loading) {
-      return <h1>Loading...</h1>;
+      return <Loading />;
     } else {
       return (
-        <Box className="w-full bg-error h-full flex flex-col justify-center items-center">
+        <Box className="w-full  h-full flex flex-col justify-center items-center">
           <h1 className="text-center text-xl font-bold ">
             Your Attendance Data
           </h1>

@@ -9,6 +9,7 @@ import { Box, Icon } from "@mui/material";
 import CartoonImage from "../../../assets/svg/girl.svg";
 import { useDispatch } from "react-redux";
 import { stateModifier } from "../../../features/reducers/state-slice";
+import Loading from "../../Loading";
 
 function Stream({ currentUser, email, type, firstName }) {
   const [loading, setLoading] = useState(true);
@@ -93,7 +94,7 @@ function Stream({ currentUser, email, type, firstName }) {
   }, []);
 
   if (loading) {
-    return <h1>still loading....</h1>;
+    return <Loading />;
   } else {
     return (
       <div className="h-full ">

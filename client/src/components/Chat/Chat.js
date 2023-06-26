@@ -41,10 +41,9 @@ const Chat = ({ display, roomId, firstName }) => {
 
   return (
     <ChatContainer
-      className={`${display ? "" : "width0"} `}
-      style={{ backgroundColor: "gainsboro" }}
+      className={`${display ? "" : "width0"} bg-neutral rounded-2xl p-3   `}
     >
-      <TopHeader>Group Chat Room</TopHeader>
+      <TopHeader className="text-secondary-content">Chat room</TopHeader>
       <ChatArea>
         <MessageList>
           {msg &&
@@ -52,15 +51,19 @@ const Chat = ({ display, roomId, firstName }) => {
               if (sender !== currentUser) {
                 return (
                   <Message key={idx}>
-                    <strong>{firstName}</strong>
-                    <p>{msg}</p>
+                    <strong className="text-secondary-content">
+                      {firstName}
+                    </strong>
+                    <p className="text-secondary-content">{msg}</p>
                   </Message>
                 );
               } else {
                 return (
                   <UserMessage key={idx}>
-                    <strong>{firstName}</strong>
-                    <p>{msg}</p>
+                    <strong className="text-secondary-content">
+                      {firstName}
+                    </strong>
+                    <p className="text-secondary-content">{msg}</p>
                   </UserMessage>
                 );
               }
@@ -82,7 +85,6 @@ const ChatContainer = styled.div`
   flex-direction: column;
   width: 35%;
   height: 100%;
-  background-color: white;
   transition: all 0.5s ease;
   overflow: hidden;
 `;
@@ -92,7 +94,6 @@ const TopHeader = styled.div`
   margin-top: 15px;
   font-weight: 600;
   font-size: 20px;
-  color: black;
 `;
 
 const ChatArea = styled.div`
@@ -120,6 +121,7 @@ const Message = styled.div`
   margin-top: 15px;
   margin-left: 15px;
   text-align: left;
+  color: "#fff";
 
   > strong {
     margin-left: 3px;
