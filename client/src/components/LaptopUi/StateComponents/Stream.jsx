@@ -103,7 +103,7 @@ function Stream({ currentUser, email, type, firstName }) {
         ) : (
           <div className="h-full">
             {type == "Host" ? (
-              <div className="w-full h-full bg-error flex  justify-center  items-center ">
+              <div className="w-full h-full text-secondary-content flex  justify-center  items-center ">
                 {isCameraOn ? (
                   <div className="mx-5  h-6/6 w-4/12">
                     <h1 className="text-center my-5 text-xl">
@@ -154,14 +154,14 @@ function Stream({ currentUser, email, type, firstName }) {
                     value={title}
                     placeholder="Enter Stream Title"
                     onChange={(e) => setTitle(e.target.value)}
-                    className="outline-none my-3 p-3"
+                    className="outline-none my-3 p-3 text-neutral"
                   />
                   <input
                     type="text"
                     value={description}
                     placeholder="Enter Stream Description"
                     onChange={(e) => setDescription(e.target.value)}
-                    className="outline-none my-3 p-3"
+                    className="outline-none my-3 p-3 text-neutral"
                   />
                   <button
                     className="btn btn-secondary"

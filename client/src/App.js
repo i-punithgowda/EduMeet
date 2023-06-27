@@ -11,6 +11,7 @@ import Additional from "./pages/Additional";
 import Verification from "./pages/Verification";
 import Panel from "./pages/Dashboard";
 import Verify from "./pages/Verify";
+import Error from "./pages/Error";
 import "./App.css";
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
         <Route exact path="/verification" element={<Verification />} />
         <Route exact path="/verify/:email" element={<Verify />} />
         <Route exact path="/dashboard" element={<Panel />} />
+        <Route path="*" element={<Error />} />
       </Routes>
     </BrowserRouter>
   );

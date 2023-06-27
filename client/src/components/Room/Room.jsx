@@ -59,52 +59,45 @@ const Room = (props) => {
   const [recordedVideo, setRecordedVideo] = useState(null);
 
   const startRecording = async () => {
-    if (type === "Host") {
-      try {
-        if (recording == false) {
-          setRecording(true);
-          const screenStream = await navigator.mediaDevices.getDisplayMedia({
-            video: true,
-            audio: true,
+    let data = [];
+
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: { mediaSource: "screen" },
+        audio: true,
+      });
+
+      const audio = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: false,
+      });
+
+      const combine = new MediaStream([
+        ...stream.getTracks(),
+        ...audio.getTracks(),
+      ]);
+
+      const recorder = new MediaRecorder(combine);
+      recorder.ondataavailable = (e) => {
+        data.push(e.data);
+      };
+      recorder.onstop = async () => {
+        const blob = new Blob(data, { type: "video/mp4" });
+        const formData = new FormData();
+        formData.append("file", blob);
+        formData.append("streamId", currentStreamId);
+
+        try {
+          const response = await fetch(`${baseAPI}/save-video`, {
+            method: "POST",
+            body: formData,
           });
 
-          mediaStreamRef.current = screenStream;
-
-          recordedChunks = [];
-
-          let recorder = RecordRTC(screenStream, {
-            type: "video",
-            mimeType: "video/webm",
-            audioBitsPerSecond: 128000,
-            videoBitsPerSecond: 2500000,
-          });
-          setMediaRecorder(recorder);
-
-          recorder.startRecording();
-          console.log("Recording started");
-        }
-      } catch (error) {
-        console.error("Error starting recording:", error);
-      }
-    }
-  };
-
-  const handleStreamStop = async () => {
-    mediaRecorder.stopRecording(() => {
-      const blob = mediaRecorder.getBlob();
-      const formData = new FormData();
-      formData.append("file", blob);
-      formData.append("streamId", currentStreamId);
-      fetch(`${baseAPI}/save-video`, {
-        method: "POST",
-        body: formData,
-      })
-        .then((response) => response.json())
-        .then(async (data) => {
-          if (data.status == true) {
+          const responseData = await response.json();
+          if (responseData.status) {
             await axios.put(`${baseAPI}/end-stream`, {
               id: currentStreamId,
-              video_url: data.video_url,
+              video_url: responseData.video_url,
             });
 
             await axios.put(`${baseAPI}/update-stream-status`, {
@@ -115,8 +108,22 @@ const Room = (props) => {
               roomId: roomId,
             });
           }
-        });
-    });
+        } catch (error) {
+          console.error(error);
+        }
+      };
+
+      setMediaRecorder(recorder);
+      mediaStreamRef.current = recorder;
+
+      recorder.start();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleStreamStop = async () => {
+    mediaStreamRef.current.stop();
   };
 
   const handleAttendance = () => {
